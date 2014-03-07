@@ -9,15 +9,17 @@
  * @license   MIT, http://seaf.hazime.org
  */
 
-namespace Seaf\Logger;
+namespace Seaf\Compponent\Logger;
 
-use Seaf\Collection\ArrayCollection;
 
 /**
- * Logger
+ * ロガークラス
  */
-class Logger implements LoggerIF
+class Logger
 {
+    /**
+     * ログレベル
+     */
     const LOG_FATAL = 1;
     const LOG_ERR   = 2;
     const LOG_WARN  = 4;
@@ -25,6 +27,9 @@ class Logger implements LoggerIF
     const LOG_DEBUG = 16;
     const LOG_ALL   = 31;
 
+    /**
+     * エラーラベルマップ
+     */
     public static $error_map = array(
         self::LOG_FATAL => 'FATAL',
         self::LOG_ERR   => 'ERR',
@@ -33,6 +38,9 @@ class Logger implements LoggerIF
         self::LOG_DEBUG => 'DEBUG'
     );
 
+    /**
+     * PHPエラーマップ
+     */
     public static $php_error_map = array(
         E_COMPILE_ERROR     => self::LOG_FATAL,
         E_ERROR             => self::LOG_FATAL,
@@ -51,18 +59,14 @@ class Logger implements LoggerIF
         E_STRICT            => self::LOG_DEBUG
     );
 
-    private $handlerCollection;
-    private $name = "Logger";
 
+    /**
+     *
+     */
     public function __construct( )
     {
-        $this->handlerCollection = new LogHandlerCollection();
     }
 
-    public function setName( $name )
-    {
-        $this->name = $name;
-    }
 
     /**
      * ハンドラの登録
@@ -104,29 +108,6 @@ class Logger implements LoggerIF
         }
     }
 
-    /**
-     * PHP: Shutdown Function
-     */
-    public function shutdownFunction( )
-    {
-        foreach( $this->handlerCollection as $handler )
-        {
-            $handler->shutdown();
-        }
-    }
-
-    /**
-     * PHPエラーハンドラ‐
-     */
-    public function phpErrorHandler( $no, $msg, $file, $line, $context )
-    {
-        $level   = self::$php_error_map[$no];
-        $name    = self::$error_map[$level];
-
-        $message = 'PHP: '.$msg.' '.$file.' '.$line;
-
-        $this->$name($message);
-    }
 
     /**
      * 致命的なエラー
@@ -199,7 +180,7 @@ class Logger implements LoggerIF
     }
 
     /**
-     *
+     * エラーメッセージを取得する
      */
     protected function makeMessage( $params )
     {
@@ -209,6 +190,28 @@ class Logger implements LoggerIF
         }
 
         return vsprintf( $params[0], array_slice($params,1) );
+    }
+
+    /**
+     * PHP: Shutdown Function
+     */
+    public function shutdownFunction( )
+    {
+        foreach( $this->handlerCollection as $handler )
+        {
+            $handler->shutdown();
+        }
+    }
+
+    /**
+     * PHPエラーハンドラ‐
+     */
+    public function phpErrorHandler( $no, $msg, $file, $line, $context )
+    {
+        $level   = self::$php_error_map[$no];
+        $name    = self::$error_map[$level];
+        $message = 'PHP: '.$msg.' '.$file.' '.$line;
+        $this->$name($message);
     }
 }
 
